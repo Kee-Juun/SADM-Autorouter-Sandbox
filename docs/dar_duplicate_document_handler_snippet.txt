@@ -1,0 +1,121 @@
+DAR Autorouter - Duplicate Document Handler
+===========================================
+
+This example:
+1. Accepts the initial duplicate alert.
+2. Selects "Process as a New Document".
+3. Clicks Continue.
+4. Accepts follow-up alerts.
+5. Waits until the blocking overlay is gone.
+6. Retries the sequence up to three times.
+
+IMPORTANT:
+This selects "Process as a New Document". If the approved business rule is
+"Archive as Duplicate", use the appropriate archive radio option instead.
+
+
+import time
+
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
+
+def accept_pending_alerts(driver, timeout=1, max_alerts=5):
+    """Accept consecutive browser alerts until none remain."""
+
+    for _ in range(max_alerts):
+        try:
+            WebDriverWait(driver, timeout).until(EC.alert_is_present())
+            alert = driver.switch_to.alert
+            print(f"Accepting alert: {alert.text}")
+            alert.accept()
+        except TimeoutException:
+            break
+
+
+def click_with_js_fallback(driver, element):
+    """Click normally, then fall back to JavaScript if needed."""
+
+    try:
+        element.click()
+    except Exception:
+        driver.execute_script("arguments[0].click();", element)
+
+
+def handle_duplicate_document(driver):
+    """Handle a duplicate-document alert and blocking overlay."""
+
+    try:
+        WebDriverWait(driver, 3).until(EC.alert_is_present())
+        alert = driver.switch_to.alert
+        alert_text = alert.text.strip()
+        alert.accept()
+
+        if "duplicate document" not in alert_text.lower():
+            return False
+    except TimeoutException:
+        # The overlay can already be visible without an active alert.
+        pass
+
+    for attempt in range(1, 4):
+        try:
+            accept_pending_alerts(driver)
+
+            # Select "Process as a New Document".
+            process_radio = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located(
+                    (By.ID, "processDuplicate")
+                )
+            )
+            driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center'});",
+                process_radio,
+            )
+            click_with_js_fallback(driver, process_radio)
+
+            accept_pending_alerts(driver)
+
+            # Click Continue in the duplicate dialog.
+            continue_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable(
+                    (
+                        By.XPATH,
+                        "//div[contains(@class,'ui-dialog')]"
+                        "//button[.//span[normalize-space()='Continue'] "
+                        "or normalize-space()='Continue']",
+                    )
+                )
+            )
+            click_with_js_fallback(driver, continue_button)
+
+            accept_pending_alerts(driver)
+
+            # Do not continue the bot until the blocking overlay is gone.
+            WebDriverWait(driver, 15).until(
+                lambda current_driver: not any(
+                    element.is_displayed()
+                    for element in current_driver.find_elements(
+                        By.CLASS_NAME,
+                        "ui-widget-overlay",
+                    )
+                )
+            )
+
+            return True
+
+        except Exception as error:
+            print(
+                f"Duplicate handling attempt {attempt}/3 failed: "
+                f"{error}"
+            )
+            time.sleep(1)
+
+    return False
+
+
+# Example usage:
+#
+# if not handle_duplicate_document(driver):
+#     print("No duplicate popup handled or duplicate handling failed.")
