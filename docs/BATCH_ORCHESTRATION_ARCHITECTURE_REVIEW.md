@@ -326,4 +326,6 @@ Selenium code moved. See `MODE_DEVELOPER_INTEGRATION_GUIDE.md`.
 
 The selective 2026-07-28 sync centralizes compatible ChromeDriver resolution and
 adds parser/compliance tests without changing batch orchestration. The full offline
-suite now passes 373 tests. See `RECENT_PRODUCTION_SYNC_2026-07-28.md`.
+suite now passes 381 tests. See `RECENT_PRODUCTION_SYNC_2026-07-28.md` and
+`RECENT_PRODUCTION_SYNC_2026-08-07.md`. The August sync did not change batch
+orchestration boundaries.

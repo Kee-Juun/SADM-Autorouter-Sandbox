@@ -35,7 +35,7 @@ filename mapping (`t`/`table`) with the same exact value.
 - filename-based Source Detail extraction uses the mandated value.
 
 Existing MNSUTB form characterization fixtures now use the shared constant. The full
-offline suite passes 373 tests.
+offline suite passes 381 tests.
 
 No live browser or staging route was performed, so availability of the exact visible
 dropdown option remains a live-validation item.

@@ -12,6 +12,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -195,6 +196,89 @@ def _get_chromedriver_version(driver_path):
     )
 
 
+def _candidate_bundled_chromedriver_paths():
+    """Return existing driver executables shipped beside source or a frozen app."""
+    base_dirs = []
+    frozen_base = getattr(sys, "_MEIPASS", None)
+    if frozen_base:
+        base_dirs.append(Path(frozen_base))
+
+    try:
+        base_dirs.append(Path(__file__).resolve().parent.parent)
+    except Exception:
+        pass
+
+    base_dirs.append(Path.cwd())
+    relative_paths = (
+        Path("chromedriver.exe"),
+        Path("chromedriver") / "chromedriver.exe",
+        Path("drivers") / "chromedriver.exe",
+        Path("assets") / "drivers" / "chromedriver.exe",
+    )
+
+    candidates = []
+    seen = set()
+    for base_dir in base_dirs:
+        for relative_path in relative_paths:
+            candidate = base_dir / relative_path
+            key = str(candidate).lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            if candidate.exists():
+                candidates.append(candidate)
+    return candidates
+
+
+def _candidate_cached_chromedriver_paths():
+    """Return cached drivers from newest to oldest."""
+    cache_root = Path.home() / ".wdm" / "drivers" / "chromedriver"
+    if not cache_root.exists():
+        return []
+
+    candidates = list(cache_root.rglob("chromedriver.exe"))
+    return sorted(
+        candidates,
+        key=lambda path: path.stat().st_mtime if path.exists() else 0,
+        reverse=True,
+    )
+
+
+def _find_compatible_existing_driver(chrome_version):
+    """Prefer a bundled or cached driver matching the installed Chrome major."""
+    chrome_major = _major(chrome_version)
+    if not chrome_major:
+        return None
+
+    candidates = (
+        _candidate_bundled_chromedriver_paths()
+        + _candidate_cached_chromedriver_paths()
+    )
+    if not candidates:
+        logging.info(
+            "No bundled or cached ChromeDriver candidates found before download."
+        )
+        return None
+
+    for candidate in candidates:
+        driver_version = _get_chromedriver_version(str(candidate))
+        if _major(driver_version) == chrome_major:
+            logging.info(
+                "Using existing ChromeDriver before download: %s "
+                "(driver=%s, chrome=%s)",
+                candidate,
+                driver_version or "unknown",
+                chrome_version,
+            )
+            return str(candidate)
+
+    logging.info(
+        "No bundled or cached ChromeDriver matched installed Chrome major %s.",
+        chrome_major,
+    )
+    return None
+
+
 def _clear_chromedriver_cache():
     cache_root = Path.home() / ".wdm" / "drivers" / "chromedriver"
     try:
@@ -268,6 +352,11 @@ def resolve_chromedriver_path():
     )
 
     chrome_version = detect_chrome_version()
+    existing_driver = _find_compatible_existing_driver(chrome_version)
+    if existing_driver:
+        logging.info("Using ChromeDriver at: %s", existing_driver)
+        return existing_driver
+
     attempts = []
     if chrome_version:
         attempts.append(chrome_version)
@@ -331,6 +420,7 @@ def resolve_chromedriver_path():
 
     raise Exception(
         "Could not resolve a ChromeDriver compatible with the installed "
-        "Chrome browser. Please close the bot, update Chrome if needed, "
-        "delete the .wdm ChromeDriver cache, and retry."
+        "Chrome browser. The machine could not download ChromeDriver and no "
+        "compatible cached/bundled driver was found. Please connect to "
+        "internet/VPN or allow access to ChromeDriver download hosts, then retry."
     ) from last_error

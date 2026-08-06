@@ -7,6 +7,22 @@ from core import chromedriver_resolver
 
 
 class ChromeDriverResolverTests(unittest.TestCase):
+    def setUp(self):
+        self.bundled_candidates = patch.object(
+            chromedriver_resolver,
+            "_candidate_bundled_chromedriver_paths",
+            return_value=[],
+        )
+        self.cached_candidates = patch.object(
+            chromedriver_resolver,
+            "_candidate_cached_chromedriver_paths",
+            return_value=[],
+        )
+        self.bundled_candidates.start()
+        self.cached_candidates.start()
+        self.addCleanup(self.bundled_candidates.stop)
+        self.addCleanup(self.cached_candidates.stop)
+
     def test_version_parsing_and_major_extraction(self):
         self.assertEqual(
             "126.0.6478.127",
@@ -43,6 +59,61 @@ class ChromeDriverResolverTests(unittest.TestCase):
             result = chromedriver_resolver.resolve_chromedriver_path()
 
         self.assertEqual(r"C:\driver\chromedriver.exe", result)
+        install.assert_called_once_with("126.0.6478.127")
+
+    def test_matching_existing_driver_is_used_before_download(self):
+        bundled = r"C:\app\drivers\chromedriver.exe"
+        with (
+            patch.object(
+                chromedriver_resolver,
+                "detect_chrome_version",
+                return_value="126.0.6478.127",
+            ),
+            patch.object(
+                chromedriver_resolver,
+                "_candidate_bundled_chromedriver_paths",
+                return_value=[bundled],
+            ),
+            patch.object(
+                chromedriver_resolver,
+                "_get_chromedriver_version",
+                return_value="126.0.6478.126",
+            ),
+            patch.object(chromedriver_resolver, "_install_driver") as install,
+        ):
+            result = chromedriver_resolver.resolve_chromedriver_path()
+
+        self.assertEqual(bundled, result)
+        install.assert_not_called()
+
+    def test_incompatible_existing_driver_falls_back_to_download(self):
+        bundled = r"C:\app\drivers\chromedriver.exe"
+        downloaded = r"C:\download\chromedriver.exe"
+        with (
+            patch.object(
+                chromedriver_resolver,
+                "detect_chrome_version",
+                return_value="126.0.6478.127",
+            ),
+            patch.object(
+                chromedriver_resolver,
+                "_candidate_bundled_chromedriver_paths",
+                return_value=[bundled],
+            ),
+            patch.object(
+                chromedriver_resolver,
+                "_install_driver",
+                return_value=downloaded,
+            ) as install,
+            patch.object(
+                chromedriver_resolver,
+                "_get_chromedriver_version",
+                side_effect=["125.0.0.0", "126.0.6478.126"],
+            ),
+        ):
+            result = chromedriver_resolver.resolve_chromedriver_path()
+
+        self.assertEqual(downloaded, result)
         install.assert_called_once_with("126.0.6478.127")
 
     def test_major_mismatch_clears_cache_and_retries_default_detection(self):
@@ -119,7 +190,7 @@ class ChromeDriverResolverTests(unittest.TestCase):
             ),
             self.assertRaisesRegex(
                 Exception,
-                "Could not resolve a ChromeDriver compatible",
+                "no compatible cached/bundled driver was found",
             ),
         ):
             chromedriver_resolver.resolve_chromedriver_path()
