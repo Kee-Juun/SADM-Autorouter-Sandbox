@@ -206,13 +206,17 @@ and staging gates. No runtime source moved.
 
 The selective 2026-07-28 sync adds recent OHTAX0 parsing, ChromeDriver resolution,
 canonical Table Source Detail mappings, and the Plus+ build spec while retaining all
-modular boundaries. The current full offline suite passes 381 tests. See
+modular boundaries. The current full offline suite passes 384 tests. See
 `RECENT_PRODUCTION_SYNC_2026-07-28.md`.
 
 The 2026-08-07 selective sync updates only shared services: ChromeDriver resolution,
 MSPB text classification, and run notification formatting. No monolithic production
 router code was copied into `smducar_router.py`; existing registry and mode-module
 ownership remain authoritative. See `RECENT_PRODUCTION_SYNC_2026-08-07.md`.
+
+The 2026-08-16 sync affects only the GUI completion-summary ordering in
+`frontend/smducar_pyqt.py`. Router registry, mode modules, orchestration, and
+Selenium ownership remain unchanged. See `RECENT_PRODUCTION_SYNC_2026-08-16.md`.
 
 An explicitly authorized business-compliance change subsequently sets MNSUTB Source
 Detail to `Table-(5-day spec source)` in `core/mnsutb_extractor.py`. This is not

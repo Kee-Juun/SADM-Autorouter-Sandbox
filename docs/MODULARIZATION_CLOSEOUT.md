@@ -33,7 +33,7 @@ No further batch-code movement is recommended for readability alone.
 | `CaseLawRouter.process_rows()` | 59 lines |
 | Router class methods | 156 |
 | `core/router_modes/` Python modules | 41 |
-| Full offline suite | 381 tests |
+| Full offline suite | 384 tests |
 
 The remaining router size does not indicate that every method should move. It
 contains compatibility entry points plus shared browser/PDF helpers whose extraction
@@ -82,7 +82,7 @@ The developer guide explains every required integration point for a new mode.
 
 ## Validation record
 
-The current offline baseline is 381 passing tests. It covers:
+The current offline baseline is 384 passing tests. It covers:
 
 - registry, compatibility, orchestration, and workflow policy;
 - all five document batch-row wrappers;
@@ -158,3 +158,8 @@ The selective 2026-08-07 sync adds cached/bundled ChromeDriver reuse, improved M
 title-driven Source Detail classification, and richer critical/success notification
 formatting at shared service boundaries. Router mode wrappers and registry ownership
 remain unchanged. See `RECENT_PRODUCTION_SYNC_2026-08-07.md`.
+
+The selective 2026-08-16 sync changes only completion-summary presentation order:
+newly routed counts now appear before already-processed counts, followed by timeout
+details. It adds three offline GUI-summary contracts without changing any registry,
+mode, batch, or Selenium boundary. See `RECENT_PRODUCTION_SYNC_2026-08-16.md`.

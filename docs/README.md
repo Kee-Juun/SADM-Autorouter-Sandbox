@@ -18,8 +18,9 @@ Use these documents for current development:
    `process_rows()` boundary analysis.
 6. [BATCH_ORCHESTRATION_CHARACTERIZATION.md](BATCH_ORCHESTRATION_CHARACTERIZATION.md) — behavior locked by offline tests.
 7. [MNSUTB_SOURCE_DETAIL_COMPLIANCE.md](MNSUTB_SOURCE_DETAIL_COMPLIANCE.md) — exact MNSUTB Source Detail requirement.
-8. [RECENT_PRODUCTION_SYNC_2026-08-07.md](RECENT_PRODUCTION_SYNC_2026-08-07.md) — latest selective production-to-modular sync.
-9. [RECENT_PRODUCTION_SYNC_2026-07-28.md](RECENT_PRODUCTION_SYNC_2026-07-28.md) — previous selective original-project sync.
+8. [RECENT_PRODUCTION_SYNC_2026-08-16.md](RECENT_PRODUCTION_SYNC_2026-08-16.md) — latest completion-summary presentation sync.
+9. [RECENT_PRODUCTION_SYNC_2026-08-07.md](RECENT_PRODUCTION_SYNC_2026-08-07.md) — shared-service production-to-modular sync.
+10. [RECENT_PRODUCTION_SYNC_2026-07-28.md](RECENT_PRODUCTION_SYNC_2026-07-28.md) — previous selective original-project sync.
 
 If a historical phase document conflicts with current code, use the current
 architecture, developer guide, tests, and closeout. Historical documents record the
@@ -34,7 +35,7 @@ not current metrics.
 | `CaseLawRouter.process_batch()` | 146 formatted lines |
 | `CaseLawRouter.process_rows()` | 59 lines |
 | `core/router_modes/` Python modules | 41 |
-| Full offline suite | 381 tests |
+| Full offline suite | 384 tests |
 
 MNSUTB Source Detail is exactly `Table-(5-day spec source)`.
 
@@ -51,6 +52,7 @@ baseline, not an implicit authorization to run staging later.
 - [BATCH_ORCHESTRATION_CHARACTERIZATION.md](BATCH_ORCHESTRATION_CHARACTERIZATION.md)
 - [MODULARIZATION_CLOSEOUT.md](MODULARIZATION_CLOSEOUT.md)
 - [MNSUTB_SOURCE_DETAIL_COMPLIANCE.md](MNSUTB_SOURCE_DETAIL_COMPLIANCE.md)
+- [RECENT_PRODUCTION_SYNC_2026-08-16.md](RECENT_PRODUCTION_SYNC_2026-08-16.md)
 - [RECENT_PRODUCTION_SYNC_2026-08-07.md](RECENT_PRODUCTION_SYNC_2026-08-07.md)
 - [RECENT_PRODUCTION_SYNC_2026-07-28.md](RECENT_PRODUCTION_SYNC_2026-07-28.md)
 
