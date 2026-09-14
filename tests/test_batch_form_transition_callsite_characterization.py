@@ -120,7 +120,7 @@ class BatchFormTransitionCallsiteCharacterizationTests(unittest.TestCase):
 
         result, _, _, _, _ = _run(router)
 
-        self.assertEqual((1, 2), result)
+        self.assertEqual((0, 2), result)
         router._should_refresh_retry_form_status.assert_called_once_with(
             "custom form status",
             7,
@@ -186,7 +186,7 @@ class BatchFormTransitionCallsiteCharacterizationTests(unittest.TestCase):
 
         result, _, _, _, _ = _run(router)
 
-        self.assertEqual((1, 2), result)
+        self.assertEqual((0, 2), result)
         self.assertEqual("RELATED LNI TIMEOUT", status_updates_buffer[7])
 
     def test_transition_failures_enter_generic_cleanup_and_finally(self):

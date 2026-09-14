@@ -88,6 +88,7 @@ from .mnsutb_extractor import (
     parse_mnsutb_document_text,
     parse_mnsutb_pdf_bytes,
 )
+from .mework_extractor import MEWORKMetadata, is_mework_row
 from .router_modes.handlers import (
     select_form_mode_handler,
     select_row_mode_handler,
@@ -190,11 +191,17 @@ from .router_modes.ohtax0_batch_row import (
 from .router_modes.mnsutb_batch_row import (
     process_mnsutb_document_row as run_process_mnsutb_document_row,
 )
+from .router_modes.mework_batch_row import (
+    process_mework_document_row as run_process_mework_document_row,
+)
 from .router_modes.itc_batch_row import (
     process_itc_document_row as run_process_itc_document_row,
 )
 from .router_modes.irsplr_batch_row import (
     process_irsplr_document_row as run_process_irsplr_document_row,
+)
+from .router_modes.mosu00_batch_row import (
+    process_mosu00_document_row as run_process_mosu00_document_row,
 )
 from .router_modes.document_run_dispatch import (
     dispatch_document_run as run_dispatch_document_run,
@@ -221,6 +228,9 @@ from .router_modes.batch_row_finalization import (
     finalize_batch_row,
     log_batch_row_duration,
 )
+from .router_modes.mosu00_router_mixin import MOSU00RouterMixin
+from .router_modes.mework_router_mixin import MEWORKRouterMixin
+from .mosu00_extractor import is_mosu00_table_row
 
 
 _itc_duplicate_lock = threading.Lock()
@@ -230,7 +240,7 @@ class RouterSessionLostError(RuntimeError):
     """Raised when the active Selenium browser session can no longer be used."""
 
 
-class CaseLawRouter:
+class CaseLawRouter(MEWORKRouterMixin, MOSU00RouterMixin):
     def __init__(self, driver, show_error=None, set_status=None):
         self.driver = driver
         self.wait = WebDriverWait(self.driver, 60)
@@ -248,6 +258,10 @@ class CaseLawRouter:
         self.ohtax0_download_dir.mkdir(parents=True, exist_ok=True)
         self.mnsutb_download_dir = Path.home() / "Downloads" / "Case Law Auto-Routing Resources" / "MNSUTB PDF Downloads"
         self.mnsutb_download_dir.mkdir(parents=True, exist_ok=True)
+        self.mework_download_dir = Path.home() / "Downloads" / "Case Law Auto-Routing Resources" / "MEWORK PDF Downloads"
+        self.mework_download_dir.mkdir(parents=True, exist_ok=True)
+        self.mosu00_download_dir = Path.home() / "Downloads" / "Case Law Auto-Routing Resources" / "MOSU00 HTML Downloads"
+        self.mosu00_download_dir.mkdir(parents=True, exist_ok=True)
         self._archive_duplicate_mode = False
         self._irsplr_unreadable_pdf_signatures = set()
 
@@ -286,6 +300,9 @@ class CaseLawRouter:
             "RELATED LNI ERROR",
             "RELATED LNI TIMEOUT",
             "RELATED LNI FIELD LOCKED",
+            "ROUTE ERROR",
+            "ROUTE_ERROR",
+            "ROUTE DROPDOWN ERROR",
         }
 
     def _mark_remaining_rows_after_router_session_loss(self, df, current_full_index, message):
@@ -558,7 +575,10 @@ class CaseLawRouter:
             if metadata and getattr(metadata, "has_text_content", False):
                 return metadata
 
-            logging.warning("ITC PDF did not expose readable text; skipping filename-only fallback.")
+            logging.warning(
+                "ITC PDF metadata could not be extracted after strict filename "
+                "fallback checks."
+            )
             return None
         except Exception as e:
             logging.error(f"Error extracting ITC metadata from PDF: {e}")
@@ -663,6 +683,10 @@ class CaseLawRouter:
 
         # Fallback: first visible PDF-looking link in the results.
         for candidate in self.driver.find_elements(By.XPATH, "//a[contains(translate(@href, 'PDF', 'pdf'), '.pdf')]"):
+            if candidate.is_displayed():
+                return candidate
+
+        for candidate in self.driver.find_elements(By.XPATH, "//a[contains(translate(@href, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '.html') or contains(translate(@href, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '.htm')]"):
             if candidate.is_displayed():
                 return candidate
 
@@ -1688,7 +1712,7 @@ class CaseLawRouter:
             if values:
                 return unquote(values[0])
             name = Path(unquote(parsed.path)).name
-            return name if name.lower().endswith(".pdf") else None
+            return name if name.lower().endswith((".pdf", ".htm", ".html")) else None
         except Exception:
             return None
 
@@ -2104,7 +2128,7 @@ class CaseLawRouter:
         parts = value.split("'")
         return "concat(" + ", \"'\", ".join(f"'{part}'" for part in parts) + ")"
 
-    def open_and_process_form(self, row, full_df, row_index, file_path, retry_count=0, dar_mode=False, wc_mode=False, mspb_mode=False, mspb_metadata=None, itc_metadata=None, irsplr_metadata=None, ohtax0_metadata=None, mnsutb_metadata=None):
+    def open_and_process_form(self, row, full_df, row_index, file_path, retry_count=0, dar_mode=False, wc_mode=False, mspb_mode=False, mspb_metadata=None, itc_metadata=None, irsplr_metadata=None, ohtax0_metadata=None, mnsutb_metadata=None, mework_metadata=None, mosu00_metadata=None):
         return run_open_and_process_form(
             self,
             row,
@@ -2120,6 +2144,8 @@ class CaseLawRouter:
             irsplr_metadata=irsplr_metadata,
             ohtax0_metadata=ohtax0_metadata,
             mnsutb_metadata=mnsutb_metadata,
+            mework_metadata=mework_metadata,
+            **({"mosu00_metadata": mosu00_metadata} if mosu00_metadata is not None else {}),
         )
     
     def _cleanup_tabs(self, opened_tab, main_tab):
@@ -2141,6 +2167,8 @@ class CaseLawRouter:
         irsplr_metadata=None,
         ohtax0_metadata=None,
         mnsutb_metadata=None,
+        mework_metadata=None,
+        mosu00_metadata=None,
     ):
         lni = str(row.get("LNI", "")).strip()
         logging.warning(
@@ -2169,9 +2197,11 @@ class CaseLawRouter:
             irsplr_metadata=irsplr_metadata,
             ohtax0_metadata=ohtax0_metadata,
             mnsutb_metadata=mnsutb_metadata,
+            mework_metadata=mework_metadata,
+            mosu00_metadata=mosu00_metadata,
         )
 
-    def process_batch(self, df, full_df, file_path, update_progress, batch_type, dar_mode=False, wc_mode=False, mspb_mode=False, irsplr_mode=False, ohtax0_mode=False, mnsutb_mode=False):
+    def process_batch(self, df, full_df, file_path, update_progress, batch_type, dar_mode=False, wc_mode=False, mspb_mode=False, irsplr_mode=False, ohtax0_mode=False, mnsutb_mode=False, mework_mode=False, mosu00_mode=False):
         self.safe_alert_accept()
 
         processed_rows = 0
@@ -2202,6 +2232,13 @@ class CaseLawRouter:
                 # ⏱ Start timing for this LNI
                 lni_start = time.time()
 
+                mosu_dispatch_kwargs = {}
+                if mosu00_mode:
+                    mosu_dispatch_kwargs = {
+                        "mosu00_mode": True,
+                        "file_path": file_path,
+                        "is_mosu00_table_row": is_mosu00_table_row,
+                    }
                 document_outcome = dispatch_document_row_outcome(
                     self,
                     full_index,
@@ -2211,11 +2248,14 @@ class CaseLawRouter:
                     irsplr_mode=irsplr_mode,
                     ohtax0_mode=ohtax0_mode,
                     mnsutb_mode=mnsutb_mode,
+                    mework_mode=mework_mode,
                     is_itc_row=is_itc_row,
                     is_irsplr_row=is_irsplr_row,
                     is_ohtax0_row=is_ohtax0_row,
                     is_mnsutb_row=is_mnsutb_row,
+                    is_mework_row=is_mework_row,
                     select_handler=select_row_mode_handler,
+                    **mosu_dispatch_kwargs,
                 )
                 if document_outcome.handled_document:
                     if not document_outcome.continue_to_form:
@@ -2254,7 +2294,23 @@ class CaseLawRouter:
                 total_duration += finalization.duration
                 processed_count += finalization.processed_increment
 
-                log_batch_row_duration(lni, finalization.duration)
+                log_batch_row_duration(
+                    lni,
+                    finalization.duration,
+                    finalization.final_status,
+                )
+                if not finalization.processed_increment:
+                    final_status = status_updates_buffer.get(full_index) or form_status
+                    error_log_entries.append({
+                        "Row": full_index + 2,
+                        "LNI": row.get("LNI", ""),
+                        "File Name": row.get("FileName", "") or row.get("File Name", ""),
+                        "Status": final_status or "UNKNOWN",
+                        "Error Message": (
+                            f"Ended as {final_status or 'UNKNOWN'} during "
+                            f"{batch_type} batch."
+                        ),
+                    })
 
 
             except RouterSessionLostError as e:
@@ -2268,6 +2324,11 @@ class CaseLawRouter:
                 )
                 stop_batch = session_loss_outcome.stop_batch
             except Exception as e:
+                error_record_kwargs = {}
+                if mework_mode:
+                    error_record_kwargs["is_mework_row"] = is_mework_row
+                if mosu00_mode:
+                    error_record_kwargs["is_mosu00_table_row"] = is_mosu00_table_row
                 record_batch_row_error(
                     self,
                     full_index,
@@ -2281,6 +2342,7 @@ class CaseLawRouter:
                     is_irsplr_row=is_irsplr_row,
                     is_ohtax0_row=is_ohtax0_row,
                     is_mnsutb_row=is_mnsutb_row,
+                    **error_record_kwargs,
                 )
                 try:
                     self.driver.close()
@@ -2363,6 +2425,21 @@ class CaseLawRouter:
             lni,
         )
 
+    def process_mework_document_row(
+        self,
+        row_handler,
+        full_index,
+        row,
+        lni,
+    ):
+        return run_process_mework_document_row(
+            self,
+            row_handler,
+            full_index,
+            row,
+            lni,
+        )
+
     def process_itc_document_row(
         self,
         row_handler,
@@ -2391,6 +2468,13 @@ class CaseLawRouter:
             full_index,
             row,
             lni,
+        )
+
+    def process_mosu00_document_row(
+        self, row_handler, full_index, row, lni, file_path
+    ):
+        return run_process_mosu00_document_row(
+            self, row_handler, full_index, row, lni, file_path
         )
 
     def click_matching_result(self):
@@ -2521,7 +2605,7 @@ class CaseLawRouter:
             is_counsel=is_counsel,
         )
 
-    def fill_irt_form(self, row, full_df, row_index, file_path, skip_ready_check=False, dar_mode=False, wc_mode=False, mspb_mode=False, mspb_metadata=None, itc_metadata=None, irsplr_metadata=None, ohtax0_metadata=None, mnsutb_metadata=None):
+    def fill_irt_form(self, row, full_df, row_index, file_path, skip_ready_check=False, dar_mode=False, wc_mode=False, mspb_mode=False, mspb_metadata=None, itc_metadata=None, irsplr_metadata=None, ohtax0_metadata=None, mnsutb_metadata=None, mework_metadata=None, mosu00_metadata=None):
         try:
             file_name = str(row["FileName"]).strip()
             is_counsel_file = is_counsel(file_name, dar_mode, wc_mode)
@@ -2533,6 +2617,8 @@ class CaseLawRouter:
                 "irsplr": irsplr_metadata,
                 "ohtax0": ohtax0_metadata,
                 "mnsutb": mnsutb_metadata,
+                "mework": mework_metadata,
+                "mosu00": mosu00_metadata,
             }
             form_handler = select_form_mode_handler(
                 mspb_mode=mspb_mode,
@@ -2635,23 +2721,33 @@ class CaseLawRouter:
         """Compatibility entry point for the extracted MNSUTB form flow."""
         return run_mnsutb_irt_form(self, row, row_index, mnsutb_metadata)
 
-    def handle_itc_fields(self, row, itc_metadata: ITCMetadata):
+    def fill_mework_irt_form(self, row, row_index, mework_metadata: MEWORKMetadata):
+        """Compatibility entry point for MEWORK's ITC-style form flow."""
+        return run_itc_irt_form(
+            self,
+            row,
+            row_index,
+            mework_metadata,
+            context_label="MEWORK",
+        )
+
+    def handle_itc_fields(self, row, itc_metadata: ITCMetadata, context_label="ITC"):
         try:
             case_name_xpath = '//*[@id="caseName"]'
             try:
                 field = self.wait.until(EC.presence_of_element_located((By.XPATH, case_name_xpath)))
                 existing_case_name = self.wait_for_existing_field_text(case_name_xpath, timeout=6)
                 if existing_case_name:
-                    logging.info(f"ITC Case Name already present; leaving unchanged: {existing_case_name[:120]}")
+                    logging.info(f"{context_label} Case Name already present; leaving unchanged: {existing_case_name[:120]}")
                 else:
                     if field.is_enabled() and field.get_attribute("readonly") != "true":
                         field.clear()
                         field.send_keys("RE")
-                        logging.info("ITC Case Name was blank; set to RE.")
+                        logging.info("%s Case Name was blank; set to RE.", context_label)
                     else:
-                        logging.info("Skipped ITC Case Name because it is not interactable.")
+                        logging.info("Skipped %s Case Name because it is not interactable.", context_label)
             except Exception:
-                logging.error("Error setting ITC case name")
+                logging.error("Error setting %s case name", context_label)
 
             if not self.select_source_detail(itc_metadata.source_detail):
                 return False
@@ -2673,12 +2769,12 @@ class CaseLawRouter:
                 comment_parts.append(additional_comments)
 
             if comment_parts:
-                if not self.append_comments(comment_parts, "ITC"):
+                if not self.append_comments(comment_parts, context_label):
                     return False
 
             return True
         except Exception as e:
-            logging.error(f"Error handling ITC fields: {e}")
+            logging.error("Error handling %s fields: %s", context_label, e)
             return False
 
     def handle_irsplr_fields(self, row, irsplr_metadata: IRSPLRMetadata):
@@ -2942,14 +3038,9 @@ class CaseLawRouter:
         irsplr_mode=False,
         ohtax0_mode=False,
         mnsutb_mode=False,
+        mework_mode=False,
     ):
-        return run_dispatch_document_run(
-            self,
-            full_df,
-            filtered_counsel_df,
-            filtered_main_df,
-            file_path,
-            update_progress,
+        mode_kwargs = dict(
             dar_mode=dar_mode,
             wc_mode=wc_mode,
             mspb_mode=mspb_mode,
@@ -2957,6 +3048,17 @@ class CaseLawRouter:
             irsplr_mode=irsplr_mode,
             ohtax0_mode=ohtax0_mode,
             mnsutb_mode=mnsutb_mode,
+        )
+        if mework_mode:
+            mode_kwargs["mework_mode"] = True
+        return run_dispatch_document_run(
+            self,
+            full_df,
+            filtered_counsel_df,
+            filtered_main_df,
+            file_path,
+            update_progress,
+            **mode_kwargs,
         )
 
     def dispatch_shared_run(
@@ -2969,6 +3071,7 @@ class CaseLawRouter:
         *,
         dar_mode=False,
         wc_mode=False,
+        mosu00_mode=False,
     ):
         return run_dispatch_shared_run(
             self,
@@ -2979,24 +3082,20 @@ class CaseLawRouter:
             update_progress,
             dar_mode=dar_mode,
             wc_mode=wc_mode,
+            **({"mosu00_mode": True} if mosu00_mode else {}),
         )
 
     def finalize_shared_run(self):
         return run_finalize_shared_run(self, error_log_entries)
 
-    def process_rows(self, full_df, file_path, update_progress, dar_mode=False, wc_mode=False, mspb_mode=False, itc_mode=False, irsplr_mode=False, ohtax0_mode=False, mnsutb_mode=False):
+    def process_rows(self, full_df, file_path, update_progress, dar_mode=False, wc_mode=False, mspb_mode=False, itc_mode=False, irsplr_mode=False, ohtax0_mode=False, mnsutb_mode=False, mework_mode=False, mosu00_mode=False):
         counsel_df, main_df = None, None
         try:
             self.full_df = full_df
 
             counsel_df, main_df = filter_mapping_data(full_df, dar_mode, wc_mode, mspb_mode=mspb_mode)
 
-            document_run = self.dispatch_document_run(
-                full_df,
-                counsel_df,
-                main_df,
-                file_path,
-                update_progress,
+            document_mode_kwargs = dict(
                 dar_mode=dar_mode,
                 wc_mode=wc_mode,
                 mspb_mode=mspb_mode,
@@ -3004,6 +3103,16 @@ class CaseLawRouter:
                 irsplr_mode=irsplr_mode,
                 ohtax0_mode=ohtax0_mode,
                 mnsutb_mode=mnsutb_mode,
+            )
+            if mework_mode:
+                document_mode_kwargs["mework_mode"] = True
+            document_run = self.dispatch_document_run(
+                full_df,
+                counsel_df,
+                main_df,
+                file_path,
+                update_progress,
+                **document_mode_kwargs,
             )
             if document_run is not None:
                 return document_run.counsel_df, document_run.main_df
@@ -3016,6 +3125,7 @@ class CaseLawRouter:
                 update_progress,
                 dar_mode=dar_mode,
                 wc_mode=wc_mode,
+                mosu00_mode=mosu00_mode,
             )
             counsel_df = shared_run.counsel_df
             main_df = shared_run.main_df

@@ -16,7 +16,7 @@ from core.router_modes import LegacyModeFlags, mode_from_flags
 from core.smducar_workflow import run_automation_workflow
 
 class WorkerThread(QThread):
-    def __init__(self, update_progress, set_status, show_success, show_error, total_count, latest_excel, df, dar_mode=False, wc_mode=False, mspb_mode=False, itc_mode=False, irsplr_mode=False, ohtax0_mode=False, mnsutb_mode=False):
+    def __init__(self, update_progress, set_status, show_success, show_error, total_count, latest_excel, df, dar_mode=False, wc_mode=False, mspb_mode=False, itc_mode=False, irsplr_mode=False, ohtax0_mode=False, mnsutb_mode=False, mework_mode=False, mosu00_mode=False):
         super().__init__()
         self.update_progress = update_progress
         self.set_status = set_status
@@ -31,6 +31,8 @@ class WorkerThread(QThread):
         self.irsplr_mode = irsplr_mode
         self.ohtax0_mode = ohtax0_mode
         self.mnsutb_mode = mnsutb_mode
+        self.mework_mode = mework_mode
+        self.mosu00_mode = mosu00_mode
         # wc_mode parameter kept for backward compatibility but no longer used
         self._stop_requested = False
 
@@ -77,6 +79,8 @@ class WorkerThread(QThread):
                 irsplr_mode=self.irsplr_mode,
                 ohtax0_mode=self.ohtax0_mode,
                 mnsutb_mode=self.mnsutb_mode,
+                mework_mode=self.mework_mode,
+                mosu00_mode=self.mosu00_mode,
             )
         except Exception as e:
             tb = traceback.format_exc()
@@ -90,6 +94,8 @@ class WorkerThread(QThread):
                     irsplr_mode=self.irsplr_mode,
                     ohtax0_mode=self.ohtax0_mode,
                     mnsutb_mode=self.mnsutb_mode,
+                    mework_mode=self.mework_mode,
+                    mosu00_mode=self.mosu00_mode,
                 )
             )
             rerun_summary = finalize_rerun_ready_statuses(

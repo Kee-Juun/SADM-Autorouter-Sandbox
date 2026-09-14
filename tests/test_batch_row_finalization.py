@@ -32,7 +32,7 @@ class BatchRowFinalizationTests(unittest.TestCase):
         self.assertEqual("RELATED LNI ERROR", status_buffer[7])
         self.assertEqual("RELATED LNI ERROR", outcome.replacement_status)
         self.assertEqual(5.5, outcome.duration)
-        self.assertEqual(1, outcome.processed_increment)
+        self.assertEqual(0, outcome.processed_increment)
         clock.assert_called_once_with()
         with self.assertRaises(FrozenInstanceError):
             outcome.duration = 0
@@ -112,7 +112,7 @@ class BatchRowFinalizationTests(unittest.TestCase):
 
         self.assertEqual("ERROR", status_buffer[7])
 
-    def test_logs_exact_legacy_lni_duration(self):
+    def test_logs_successful_route_duration(self):
         from core.router_modes.batch_row_finalization import (
             log_batch_row_duration,
         )
@@ -120,11 +120,11 @@ class BatchRowFinalizationTests(unittest.TestCase):
         with patch(
             "core.router_modes.batch_row_finalization.logging.info"
         ) as log:
-            result = log_batch_row_duration("LNI-1", 2.345)
+            result = log_batch_row_duration("LNI-1", 2.345, "DONE")
 
         self.assertIsNone(result)
         log.assert_called_once_with(
-            "[LNI PROCESSING TIME] LNI LNI-1 processed in "
+            "[LNI PROCESSING TIME] LNI LNI-1 routed and saved in "
             "2.35 seconds."
         )
 

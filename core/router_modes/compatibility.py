@@ -16,6 +16,8 @@ LEGACY_MODE_PRECEDENCE = (
     ("irsplr_mode", "irsplr"),
     ("ohtax0_mode", "ohtax0"),
     ("mnsutb_mode", "mnsutb"),
+    ("mework_mode", "mework"),
+    ("mosu00_mode", "mosu00"),
     ("dar_mode", "dar"),
 )
 
@@ -31,11 +33,18 @@ class LegacyModeFlags:
     irsplr_mode: bool = False
     ohtax0_mode: bool = False
     mnsutb_mode: bool = False
+    mework_mode: bool = False
+    mosu00_mode: bool = False
 
     def as_workflow_kwargs(self) -> Dict[str, bool]:
         """Return a fresh keyword-argument mapping for the legacy workflow."""
 
-        return asdict(self)
+        kwargs = asdict(self)
+        if not self.mework_mode:
+            kwargs.pop("mework_mode")
+        if not self.mosu00_mode:
+            kwargs.pop("mosu00_mode")
+        return kwargs
 
 
 def normalize_mode(mode: Any = None, *, dar_mode: bool = False) -> str:
@@ -59,6 +68,8 @@ def flags_for_mode(mode: Any = None, *, dar_mode: bool = False) -> LegacyModeFla
         irsplr_mode=normalized == "irsplr",
         ohtax0_mode=normalized == "ohtax0",
         mnsutb_mode=normalized == "mnsutb",
+        mework_mode=normalized == "mework",
+        mosu00_mode=normalized == "mosu00",
     )
 
 

@@ -20,8 +20,9 @@ def fill_itc_irt_form(
     row,
     row_index,
     itc_metadata: ITCMetadata,
+    context_label="ITC",
 ):
-    """Fill an ITC/ITCALJ IRT form using existing shared router operations."""
+    """Fill a single-document form using the shared ITC-style routing rules."""
 
     previous_archive_duplicate_mode = router._archive_duplicate_mode
     router._archive_duplicate_mode = bool(
@@ -29,10 +30,15 @@ def fill_itc_irt_form(
     )
     try:
         if not itc_metadata:
-            logging.warning("Skipping ITC row because extracted metadata is missing.")
+            logging.warning(
+                "Skipping %s row because extracted metadata is missing.",
+                context_label,
+            )
             if row_index is not None:
-                status_updates_buffer[row_index] = "SKIPPED: ITC PDF DATA NOT FOUND"
-            return "SKIPPED: ITC PDF DATA NOT FOUND"
+                status_updates_buffer[row_index] = (
+                    f"SKIPPED: {context_label} PDF DATA NOT FOUND"
+                )
+            return f"SKIPPED: {context_label} PDF DATA NOT FOUND"
 
         file_name = str(row.get("FileName", "")).strip()
         router.prepare_common_fields(
@@ -47,17 +53,27 @@ def fill_itc_irt_form(
 
         if (
             getattr(itc_metadata, "is_excluded", False)
-            and router.is_locked_archive_excluded_form("ITC")
+            and router.is_locked_archive_excluded_form(context_label)
         ):
             status_updates_buffer[row_index] = "ALREADY PROCESSED"
             router.driver.close()
             router.driver.switch_to.window(router.driver.window_handles[0])
             return "ALREADY PROCESSED"
 
-        if not router.handle_itc_fields(row, itc_metadata):
+        if context_label == "ITC":
+            fields_ok = router.handle_itc_fields(row, itc_metadata)
+        else:
+            fields_ok = router.handle_itc_fields(
+                row,
+                itc_metadata,
+                context_label=context_label,
+            )
+        if not fields_ok:
             if row_index is not None:
-                status_updates_buffer[row_index] = "SKIPPED: ITC FORM FILL ERROR"
-            return "SKIPPED: ITC FORM FILL ERROR"
+                status_updates_buffer[row_index] = (
+                    f"SKIPPED: {context_label} FORM FILL ERROR"
+                )
+            return f"SKIPPED: {context_label} FORM FILL ERROR"
 
         try:
             comments_field = router.wait.until(
@@ -78,7 +94,8 @@ def fill_itc_irt_form(
                     )
                 else:
                     logging.info(
-                        "Route dropdown is disabled - ITC document already processed."
+                        "Route dropdown is disabled - %s document already processed.",
+                        context_label,
                     )
                     status_updates_buffer[row_index] = "ALREADY PROCESSED"
                     router.driver.close()
@@ -86,13 +103,16 @@ def fill_itc_irt_form(
                     return "ALREADY PROCESSED"
 
             if not comments_field.is_enabled() and not route_field.is_enabled():
-                logging.error("ITC IRT form is non-interactable.")
+                logging.error("%s IRT form is non-interactable.", context_label)
                 status_updates_buffer[row_index] = "NON-INTERACTABLE IRT FORM"
                 router.driver.close()
                 router.driver.switch_to.window(router.driver.window_handles[0])
                 return "NON-INTERACTABLE IRT FORM"
         except Exception:
-            logging.error("Could not verify ITC form interactability.")
+            logging.error(
+                "Could not verify %s form interactability.",
+                context_label,
+            )
             status_updates_buffer[row_index] = "NON-INTERACTABLE IRT FORM"
             router.driver.close()
             router.driver.switch_to.window(router.driver.window_handles[0])
@@ -119,7 +139,7 @@ def fill_itc_irt_form(
                 dropdown = Select(route_element)
                 dropdown.select_by_visible_text(route_label)
                 router.handle_any_alert()
-                logging.info(f"Selected ITC route: {route_label}")
+                logging.info("Selected %s route: %s", context_label, route_label)
                 router.driver.execute_script(
                     "document.getElementById('route').dispatchEvent(new Event('change'))"
                 )
@@ -131,18 +151,20 @@ def fill_itc_irt_form(
                 selected_route = router.get_selected_dropdown_text(route_element)
                 if router.dropdown_text_matches(selected_route, "Archive"):
                     logging.info(
-                        "Confirmed disabled ITC route dropdown is Archive for "
-                        "Excluded source detail."
+                        "Confirmed disabled %s route dropdown is Archive for "
+                        "Excluded source detail.",
+                        context_label,
                     )
                 else:
                     logging.warning(
-                        "Disabled ITC route dropdown is not Archive after Source Detail "
+                        "Disabled %s route dropdown is not Archive after Source Detail "
                         "Excluded; selected route is: %s",
+                        context_label,
                         selected_route or "(blank)",
                     )
                     if not router.set_dropdown_by_visible_text(route_element, "Archive"):
                         raise Exception(
-                            "Disabled ITC route dropdown could not be set to Archive"
+                            f"Disabled {context_label} route dropdown could not be set to Archive"
                         )
                     selected_route = router.get_selected_dropdown_text(route_element)
                     if not router.dropdown_text_matches(selected_route, "Archive"):
@@ -151,13 +173,20 @@ def fill_itc_irt_form(
                             f"selected route is {selected_route!r}"
                         )
                     logging.info(
-                        "Set and confirmed disabled ITC route dropdown is Archive for "
-                        "Excluded source detail."
+                        "Set and confirmed disabled %s route dropdown is Archive for "
+                        "Excluded source detail.",
+                        context_label,
                     )
             else:
-                raise Exception("ITC route dropdown is disabled before route selection")
-        except Exception:
-            logging.error("Failed to select ITC route before Ready to Process")
+                raise Exception(
+                    f"{context_label} route dropdown is disabled before route selection"
+                )
+        except Exception as e:
+            logging.error(
+                "Failed to select %s route before Ready to Process: %s",
+                context_label,
+                e,
+            )
             status_updates_buffer[row_index] = "ROUTE ERROR"
             router.driver.close()
             router.driver.switch_to.window(router.driver.window_handles[0])
@@ -175,8 +204,9 @@ def fill_itc_irt_form(
             return "ALERT_HANDLED"
         if overlay_appeared == "READY_NOT_CLICKABLE":
             logging.info(
-                "Ready to Process checkbox was not clickable for ITC; "
-                "marking document as ALREADY PROCESSED."
+                "Ready to Process checkbox was not clickable for %s; "
+                "marking document as ALREADY PROCESSED.",
+                context_label,
             )
             status_updates_buffer[row_index] = "ALREADY PROCESSED"
             router.driver.close()
@@ -189,7 +219,7 @@ def fill_itc_irt_form(
             skip_route_and_ready=True,
         )
     except Exception as e:
-        logging.error(f"Error in fill_itc_irt_form(): {e}")
+        logging.error("Error filling %s IRT form: %s", context_label, e)
         if row_index is not None:
             status_updates_buffer[row_index] = "ERROR"
         return "ERROR"

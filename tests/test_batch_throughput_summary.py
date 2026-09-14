@@ -29,7 +29,7 @@ class BatchThroughputSummaryTests(unittest.TestCase):
         clock.assert_called_once_with()
         log.assert_called_once_with(
             "[AVERAGE BATCH PROCESSING TIME - LNI/HOUR ESTIMATE] "
-            "Processed 2 main LNIs in 1m 0s "
+            "Successfully routed 2 main LNIs in 1m 0s "
             "(Avg: 2.50s/LNI → Est. 1440 LNIs/hour)"
         )
 
@@ -51,7 +51,7 @@ class BatchThroughputSummaryTests(unittest.TestCase):
 
         log.assert_called_once_with(
             "[AVERAGE BATCH PROCESSING TIME - LNI/HOUR ESTIMATE] "
-            "Processed 3 counsel LNIs in 1m 1s "
+            "Successfully routed 3 counsel LNIs in 1m 1s "
             "(Avg: 1.33s/LNI → Est. 2700 LNIs/hour)"
         )
 

@@ -79,6 +79,22 @@ MODE_SPECS: Tuple[ModeSpec, ...] = (
         result_label="MNSUTB",
         document_only=True,
     ),
+    ModeSpec(
+        key="mework",
+        display_name="MEWORK Autorouter",
+        router_label="MEWORK",
+        progress_batch="mework",
+        result_label="MEWORK",
+        document_only=True,
+    ),
+    ModeSpec(
+        key="mosu00",
+        display_name="MOSU Autorouter",
+        router_label="MOSU00",
+        progress_batch="mosu00",
+        result_label="MOSU",
+        document_only=False,
+    ),
 )
 
 MODE_REGISTRY: Mapping[str, ModeSpec] = MappingProxyType(

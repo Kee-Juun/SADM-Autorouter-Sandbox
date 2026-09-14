@@ -29,10 +29,14 @@ def dispatch_shared_run(
     *,
     dar_mode=False,
     wc_mode=False,
+    mosu00_mode=False,
 ) -> SharedRunOutcome:
     """Run counsel then eligible main rows using the existing contract."""
 
-    logging.info("=== Starting Counsel Batch ===")
+    logging.info(
+        "=== Starting MOSU00 Counsel Batch ==="
+        if mosu00_mode else "=== Starting Counsel Batch ==="
+    )
     counsel_count, counsel_duration = router.process_batch(
         counsel_df,
         full_df,
@@ -41,6 +45,7 @@ def dispatch_shared_run(
         "counsel",
         dar_mode,
         wc_mode,
+        **({"mosu00_mode": True} if mosu00_mode else {}),
     )
 
     main_df, deferred_main_rows = defer_main_rows_with_failed_counsel(
@@ -75,20 +80,23 @@ def dispatch_shared_run(
     except Exception:
         logging.warning("Failed to clean up extra windows")
 
-    logging.info("=== Starting Main Opinion Batch ===")
+    main_batch_type = "mosu00" if mosu00_mode else "main"
+    main_batch_label = "MOSU00" if mosu00_mode else "Main Opinion"
+    logging.info("=== Starting %s Batch ===", main_batch_label)
     if router.set_status:
-        router.set_status("Main Opinion Batch Started")
+        router.set_status(f"{main_batch_label} Batch Started")
     main_count, main_duration = router.process_batch(
         main_df,
         full_df,
         file_path,
         update_progress,
-        "main",
+        main_batch_type,
         dar_mode,
         wc_mode,
+        **({"mosu00_mode": True} if mosu00_mode else {}),
     )
     if router.set_status:
-        router.set_status("Main Opinion Batch Processed")
+        router.set_status(f"{main_batch_label} Batch Processed")
 
     total_count = counsel_count + main_count
     total_time = counsel_duration + main_duration
@@ -104,7 +112,7 @@ def dispatch_shared_run(
 
         logging.info(
             "[TOTAL AVERAGE PROCESSING TIME SUMMARY - LNI/HOUR "
-            "ESTIMATE] TOTAL: %d LNIs processed in %dm %ds",
+            "ESTIMATE] TOTAL: %d LNIs successfully routed in %dm %ds",
             total_count,
             total_mins,
             total_secs,
@@ -116,7 +124,8 @@ def dispatch_shared_run(
             counsel_secs,
         )
         logging.info(
-            "    - Main Opinion: %d LNIs in %dm %ds",
+            "    - %s: %d LNIs in %dm %ds",
+            "Main/Table" if mosu00_mode else "Main Opinion",
             main_count,
             main_mins,
             main_secs,

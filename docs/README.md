@@ -18,9 +18,11 @@ Use these documents for current development:
    `process_rows()` boundary analysis.
 6. [BATCH_ORCHESTRATION_CHARACTERIZATION.md](BATCH_ORCHESTRATION_CHARACTERIZATION.md) — behavior locked by offline tests.
 7. [MNSUTB_SOURCE_DETAIL_COMPLIANCE.md](MNSUTB_SOURCE_DETAIL_COMPLIANCE.md) — exact MNSUTB Source Detail requirement.
-8. [RECENT_PRODUCTION_SYNC_2026-08-16.md](RECENT_PRODUCTION_SYNC_2026-08-16.md) — latest completion-summary presentation sync.
-9. [RECENT_PRODUCTION_SYNC_2026-08-07.md](RECENT_PRODUCTION_SYNC_2026-08-07.md) — shared-service production-to-modular sync.
-10. [RECENT_PRODUCTION_SYNC_2026-07-28.md](RECENT_PRODUCTION_SYNC_2026-07-28.md) — previous selective original-project sync.
+8. [RECENT_PRODUCTION_SYNC_2026-09-14.md](RECENT_PRODUCTION_SYNC_2026-09-14.md) — MEWORK, ITC miscellaneous dockets, and expanded progression.
+9. [RECENT_PRODUCTION_SYNC_2026-09-08.md](RECENT_PRODUCTION_SYNC_2026-09-08.md) — strict ITC fallback, MOSU hybrid mode, and routing-count updates.
+10. [RECENT_PRODUCTION_SYNC_2026-08-16.md](RECENT_PRODUCTION_SYNC_2026-08-16.md) — completion-summary presentation sync.
+11. [RECENT_PRODUCTION_SYNC_2026-08-07.md](RECENT_PRODUCTION_SYNC_2026-08-07.md) — shared-service production-to-modular sync.
+12. [RECENT_PRODUCTION_SYNC_2026-07-28.md](RECENT_PRODUCTION_SYNC_2026-07-28.md) — previous selective original-project sync.
 
 If a historical phase document conflicts with current code, use the current
 architecture, developer guide, tests, and closeout. Historical documents record the
@@ -31,11 +33,11 @@ not current metrics.
 
 | Item | Current value |
 | --- | ---: |
-| `core/smducar_router.py` | 3,480 lines |
-| `CaseLawRouter.process_batch()` | 146 formatted lines |
-| `CaseLawRouter.process_rows()` | 59 lines |
-| `core/router_modes/` Python modules | 41 |
-| Full offline suite | 384 tests |
+| `core/smducar_router.py` | 3,590 lines |
+| `CaseLawRouter.process_batch()` | 178 lines |
+| `CaseLawRouter.process_rows()` | 65 lines |
+| `core/router_modes/` Python modules | 45 |
+| Full offline suite | 419 tests |
 
 MNSUTB Source Detail is exactly `Table-(5-day spec source)`.
 

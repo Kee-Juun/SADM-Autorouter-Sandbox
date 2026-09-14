@@ -12,7 +12,7 @@ The original goal is complete:
 - canonical keys translate through preserved legacy flags;
 - run planning and row scope are explicit non-browser policy;
 - specialized document handlers are registered adapters;
-- five document-mode form flows and shared SMD/DAR flow have module boundaries;
+- document-mode form flows and the shared SMD/DAR flow have module boundaries;
 - shared Selenium state machines have focused compatibility wrappers;
 - document-only and shared run orchestration have explicit outcomes;
 - batch preflight, finalization, errors, session loss, progress, and throughput have
@@ -28,12 +28,12 @@ No further batch-code movement is recommended for readability alone.
 
 | Item | Current value |
 | --- | ---: |
-| `core/smducar_router.py` | 3,480 lines |
-| `CaseLawRouter.process_batch()` | 146 formatted lines |
-| `CaseLawRouter.process_rows()` | 59 lines |
-| Router class methods | 156 |
-| `core/router_modes/` Python modules | 41 |
-| Full offline suite | 384 tests |
+| `core/smducar_router.py` | 3,590 lines |
+| `CaseLawRouter.process_batch()` | 178 lines |
+| `CaseLawRouter.process_rows()` | 65 lines |
+| Router class methods | 159 |
+| `core/router_modes/` Python modules | 45 |
+| Full offline suite | 419 tests |
 
 The remaining router size does not indicate that every method should move. It
 contains compatibility entry points plus shared browser/PDF helpers whose extraction

@@ -101,11 +101,11 @@ class ProcessBatchCharacterizationTests(unittest.TestCase):
         )
         log.assert_any_call(
             "[AVERAGE BATCH PROCESSING TIME - LNI/HOUR ESTIMATE] "
-            "Processed 1 main LNIs in 0m 15s "
+            "Successfully routed 1 main LNIs in 0m 15s "
             "(Avg: 2.00s/LNI → Est. 1800 LNIs/hour)"
         )
         log.assert_any_call(
-            "[LNI PROCESSING TIME] LNI LNI-1 processed in "
+            "[LNI PROCESSING TIME] LNI LNI-1 routed and saved in "
             "2.00 seconds."
         )
 
@@ -412,7 +412,7 @@ class ProcessBatchCharacterizationTests(unittest.TestCase):
                 "main",
             )
 
-        self.assertEqual(1, count)
+        self.assertEqual(0, count)
         router._refresh_and_retry_current_row.assert_called_once()
         self.assertEqual(
             "RELATED LNI TIMEOUT",

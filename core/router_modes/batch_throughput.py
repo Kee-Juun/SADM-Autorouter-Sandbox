@@ -20,7 +20,7 @@ def log_batch_throughput_summary(
     secs = int(elapsed % 60)
     logging.info(
         "[AVERAGE BATCH PROCESSING TIME - LNI/HOUR ESTIMATE] "
-        f"Processed {processed_count} {batch_type} LNIs in "
+        f"Successfully routed {processed_count} {batch_type} LNIs in "
         f"{mins}m {secs}s "
         f"(Avg: {avg:.2f}s/LNI → Est. {est_per_hour} LNIs/hour)"
     )

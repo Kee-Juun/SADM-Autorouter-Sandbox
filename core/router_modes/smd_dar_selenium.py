@@ -183,8 +183,8 @@ def fill_smd_dar_irt_form(
             "document.getElementById('route').dispatchEvent(new Event('change'))"
         )
         router.handle_any_alert()
-    except Exception:
-        logging.error("Failed to select route before Ready to Process")
+    except Exception as e:
+        logging.error("Failed to select route before Ready to Process: %s", e)
         status_updates_buffer[row_index] = "ROUTE ERROR"
         router.driver.close()
         router.driver.switch_to.window(router.driver.window_handles[0])

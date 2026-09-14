@@ -64,6 +64,8 @@ should not absorb new mode implementations.
 | IRSPLR | `is_irsplr_row()` | `irsplr_batch_row.py` | `irsplr_selenium.py` | Fallback | May archive excluded/unreadable cases |
 | OHTAX0 | `is_ohtax0_row()` | `ohtax0_batch_row.py` | `ohtax0_selenium.py` | Skip | Court/filename-aware |
 | MNSUTB | `is_mnsutb_row()` | `mnsutb_batch_row.py` | `mnsutb_selenium.py` | Skip | Source Detail must be `Table-(5-day spec source)` |
+| MEWORK | `is_mework_row()` | `mework_batch_row.py` | shared `itc_selenium.py` via `mework_router_mixin.py` | Skip | `STMEWORK`; content-fingerprint duplicate handling |
+| MOSU | `is_mosu00_row()` / `is_mosu00_table_row()` | `mosu00_batch_row.py` | `mosu00_router_mixin.py` | Skip table row | Hybrid counsel/main PDF plus table HTML flow; Source Detail is `Table-(5-day spec source)` |
 
 SMD and DAR use the shared counsel/main path and
 `core/router_modes/smd_dar_selenium.py`; they are not document handlers.

@@ -36,8 +36,22 @@ def handle_main_opinion_fields(
         field = router.wait.until(
             EC.presence_of_element_located((By.XPATH, case_name_xpath))
         )
-        if not field.get_attribute("value").strip():
-            router.clear_and_fill_input(case_name_xpath, "RE")
+        existing_case_name = router.wait_for_existing_field_text(
+            case_name_xpath, timeout=6
+        )
+        if existing_case_name:
+            logging.info(
+                "Main Opinion Case Name already present; leaving unchanged: %s",
+                existing_case_name[:120],
+            )
+        elif field.is_enabled() and field.get_attribute("readonly") != "true":
+            field.clear()
+            field.send_keys("RE")
+            logging.info("Main Opinion Case Name was blank; set to RE.")
+        else:
+            logging.info(
+                "Skipped Main Opinion Case Name because it is not interactable."
+            )
     except Exception:
         logging.error("Error setting case name")
 

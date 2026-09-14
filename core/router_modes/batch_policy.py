@@ -14,6 +14,8 @@ SUPPORTED_PROGRESS_BATCHES = frozenset(
         "irsplr",
         "ohtax0",
         "mnsutb",
+        "mework",
+        "mosu00",
     }
 )
 
@@ -123,6 +125,18 @@ MISSING_METADATA_POLICIES: Mapping[str, MissingMetadataPolicy] = (
                 metadata_status="Not Extracted",
                 row_status="SKIPPED: MNSUTB PDF DATA NOT FOUND",
             ),
+            "mework": MissingMetadataPolicy(
+                mode_key="mework",
+                action="skip",
+                metadata_status="Not Extracted",
+                row_status="SKIPPED: MEWORK PDF DATA NOT FOUND",
+            ),
+            "mosu00": MissingMetadataPolicy(
+                mode_key="mosu00",
+                action="skip",
+                metadata_status="Not Extracted",
+                row_status="SKIPPED: MOSU00 HTML DATA NOT FOUND",
+            ),
         }
     )
 )
@@ -183,6 +197,14 @@ DOCUMENT_BATCH_POLICIES: Mapping[str, DocumentBatchPolicy] = MappingProxyType(
             processed_status="MNSUTB Batch Processed",
             uses_filtered_main=False,
             process_batch_flag="mnsutb_mode",
+        ),
+        "mework": DocumentBatchPolicy(
+            mode_key="mework",
+            batch_type="mework",
+            started_status="MEWORK Batch Started",
+            processed_status="MEWORK Batch Processed",
+            uses_filtered_main=False,
+            process_batch_flag="mework_mode",
         ),
     }
 )

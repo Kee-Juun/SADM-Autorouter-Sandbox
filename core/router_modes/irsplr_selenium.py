@@ -165,8 +165,8 @@ def fill_irsplr_irt_form(
                 raise Exception(
                     "IRSPLR route dropdown is disabled before route selection"
                 )
-        except Exception:
-            logging.error("Failed to select IRSPLR route before Ready to Process")
+        except Exception as e:
+            logging.error("Failed to select IRSPLR route before Ready to Process: %s", e)
             status_updates_buffer[row_index] = "ROUTE ERROR"
             router.driver.close()
             router.driver.switch_to.window(router.driver.window_handles[0])

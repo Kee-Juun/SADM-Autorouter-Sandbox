@@ -111,6 +111,16 @@ class BatchPolicyTests(unittest.TestCase):
                 "Not Extracted",
                 "SKIPPED: MNSUTB PDF DATA NOT FOUND",
             ),
+            "mework": (
+                "skip",
+                "Not Extracted",
+                "SKIPPED: MEWORK PDF DATA NOT FOUND",
+            ),
+            "mosu00": (
+                "skip",
+                "Not Extracted",
+                "SKIPPED: MOSU00 HTML DATA NOT FOUND",
+            ),
         }
 
         self.assertEqual(tuple(expected), tuple(MISSING_METADATA_POLICIES))
@@ -157,6 +167,12 @@ class BatchPolicyTests(unittest.TestCase):
                 "MNSUTB Batch Processed",
                 False,
                 "mnsutb_mode",
+            ),
+            "mework": (
+                "MEWORK Batch Started",
+                "MEWORK Batch Processed",
+                False,
+                "mework_mode",
             ),
         }
 

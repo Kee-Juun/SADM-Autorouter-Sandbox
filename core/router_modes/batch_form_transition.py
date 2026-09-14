@@ -45,6 +45,12 @@ def process_batch_form_transition(
         "ohtax0_metadata": document_outcome.ohtax0_metadata,
         "mnsutb_metadata": document_outcome.mnsutb_metadata,
     }
+    mework_metadata = getattr(document_outcome, "mework_metadata", None)
+    if mework_metadata is not None:
+        form_kwargs["mework_metadata"] = mework_metadata
+    mosu00_metadata = getattr(document_outcome, "mosu00_metadata", None)
+    if mosu00_metadata is not None:
+        form_kwargs["mosu00_metadata"] = mosu00_metadata
     form_status = router.open_and_process_form(
         row,
         full_df,

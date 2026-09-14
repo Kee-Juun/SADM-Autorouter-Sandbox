@@ -94,8 +94,8 @@ def fill_mnsutb_irt_form(
                 router.handle_any_alert()
             else:
                 raise Exception("MNSUTB route dropdown is disabled before route selection")
-        except Exception:
-            logging.error("Failed to select MNSUTB route before Ready to Process")
+        except Exception as e:
+            logging.error("Failed to select MNSUTB route before Ready to Process: %s", e)
             status_updates_buffer[row_index] = "ROUTE ERROR"
             router.driver.close()
             router.driver.switch_to.window(router.driver.window_handles[0])

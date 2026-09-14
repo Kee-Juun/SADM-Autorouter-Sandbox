@@ -1,6 +1,8 @@
 import logging
 import re
 
+from .mosu00_extractor import extract_mosu00_docket_from_filename, is_mosu00_filename
+
 
 ITC_TA_PREFIXES = {"337", "701", "731"}
 
@@ -22,6 +24,11 @@ def normalize_itc_docket_number(docket):
         return None
 
     docket = re.sub(r"\s+", "", str(docket).strip().upper())
+
+    misc_match = re.fullmatch(r"MISC-(\d{1,5})", docket)
+    if misc_match:
+        return f"MISC-{misc_match.group(1)}"
+
     match = re.fullmatch(r"(\d{3})-(?:TA-)?(\d+)", docket)
     if not match:
         return None
@@ -35,10 +42,16 @@ def normalize_itc_docket_number(docket):
 def extract_itc_docket_number(file_name):
     file_name = str(file_name).replace("\\", "/").split("/")[-1]
     match = re.search(
-        r"^(?:itc000|itcalj)_(\d{3}-\d+)_\d{8}(?:_\d+)?\.pdf$",
+        r"^itc000_(MISC-\d{1,5})_\d{8}(?:_\d+)?\.pdf$",
         file_name,
         re.IGNORECASE,
     )
+    if not match:
+        match = re.search(
+            r"^(?:itc000|itcalj)_(\d{3}-\d+)_\d{8}(?:_\d+)?\.pdf$",
+            file_name,
+            re.IGNORECASE,
+        )
     if not match:
         return None
     return normalize_itc_docket_number(match.group(1))
@@ -57,6 +70,11 @@ def extract_docket_number(file_name, dar_mode=False, wc_mode=False):
     if itc_docket:
         logging.info(f"ITC mode: Extracted docket: {itc_docket}")
         return itc_docket
+
+    mosu00_docket = extract_mosu00_docket_from_filename(file_name)
+    if mosu00_docket:
+        logging.info(f"MOSU00 mode: Extracted docket: {mosu00_docket}")
+        return mosu00_docket
 
     if dar_mode:
         dar_match = re.search(
@@ -170,7 +188,7 @@ def detect_mode(filename):
     Auto-detect the mode (SMD, DAR, MSPB, ITC, IRSPLR, OHTAX0, MNSUTB, WC) from filename patterns.
 
     Returns:
-        str: 'smd', 'dar', 'mspb', 'wc', 'itc', 'irsplr', 'ohtax0', 'mnsutb', or 'unknown'
+        str: supported mode key or 'unknown'
     """
     filename_str = (
         str(filename)
@@ -189,6 +207,8 @@ def detect_mode(filename):
         return "ohtax0"
     if re.match(r"^ldc_smd_a\d{2}-\d{4,6}.*\.pdf$", filename_str):
         return "mnsutb"
+    if is_mosu00_filename(filename_str):
+        return "mosu00"
     if re.match(r"^(?:ldc_bc_)?(?:\d{2}[-_]\d+|\d{4,9}).*\.pdf$", filename_str):
         return "irsplr"
     if filename_str.startswith("wc_cl_"):

@@ -29,6 +29,7 @@ def _router():
     router.click_element = Mock()
     router.handle_duplicate_lni_popup = Mock()
     router.handle_related_ln_is = Mock(return_value=True)
+    router.wait_for_existing_field_text = Mock(return_value="")
     return router
 
 
@@ -95,10 +96,8 @@ class MainOpinionFieldsSeleniumCharacterizationTests(unittest.TestCase):
             )
 
         self.assertIsNone(result)
-        router.clear_and_fill_input.assert_called_once_with(
-            '//*[@id="caseName"]',
-            "RE",
-        )
+        case_field.clear.assert_called_once_with()
+        case_field.send_keys.assert_called_once_with("RE")
         dropdown.select_by_visible_text.assert_called_once_with(
             "Resolved Source"
         )

@@ -206,7 +206,7 @@ class SharedRunDispatchTests(unittest.TestCase):
 
         self.assertNotIn(
             "[TOTAL AVERAGE PROCESSING TIME SUMMARY - LNI/HOUR "
-            "ESTIMATE] TOTAL: %d LNIs processed in %dm %ds",
+            "ESTIMATE] TOTAL: %d LNIs successfully routed in %dm %ds",
             [item.args[0] for item in log.call_args_list],
         )
 

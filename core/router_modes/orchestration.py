@@ -17,6 +17,8 @@ SCOPE_FLAG_PRECEDENCE = (
     ("irsplr_mode", "irsplr"),
     ("ohtax0_mode", "ohtax0"),
     ("mnsutb_mode", "mnsutb"),
+    ("mework_mode", "mework"),
+    ("mosu00_mode", "mosu00"),
 )
 
 EMPTY_SCOPE_MESSAGES = {
@@ -27,6 +29,8 @@ EMPTY_SCOPE_MESSAGES = {
     ),
     "ohtax0": "OHTAX0 Autorouter mode found no STOHTAX0 rows to process.",
     "mnsutb": "MNSUTB Autorouter mode found no STMNSUTB rows to process.",
+    "mework": "MEWORK Autorouter mode found no STMEWORK rows to process.",
+    "mosu00": "MOSU Autorouter mode found no MOSU00 rows to process.",
 }
 
 BATCH_TYPES = {
@@ -37,6 +41,8 @@ BATCH_TYPES = {
     "irsplr": ("irsplr",),
     "ohtax0": ("ohtax0",),
     "mnsutb": ("mnsutb",),
+    "mework": ("mework",),
+    "mosu00": ("counsel", "mosu00"),
 }
 
 INITIAL_STATUS = {
@@ -47,6 +53,8 @@ INITIAL_STATUS = {
     "irsplr": "IRSPLR Batch Started",
     "ohtax0": "OHTAX0 Batch Started",
     "mnsutb": "MNSUTB Batch Started",
+    "mework": "MEWORK Batch Started",
+    "mosu00": "MOSU00 Batch Started",
 }
 
 

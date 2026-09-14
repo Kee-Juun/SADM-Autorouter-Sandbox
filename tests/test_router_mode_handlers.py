@@ -16,7 +16,7 @@ from core.router_modes.handlers import (
 class RouterModeHandlerTests(unittest.TestCase):
     def test_registry_contains_only_existing_specialized_document_modes(self):
         self.assertEqual(
-            ["mspb", "itc", "irsplr", "ohtax0", "mnsutb"],
+            ["mspb", "itc", "irsplr", "ohtax0", "mnsutb", "mework", "mosu00"],
             list(DOCUMENT_MODE_HANDLERS),
         )
 
@@ -72,9 +72,10 @@ class RouterModeHandlerTests(unittest.TestCase):
         for mode_key, handler in DOCUMENT_MODE_HANDLERS.items():
             with self.subTest(mode=mode_key):
                 router = Mock()
-                if mode_key == "itc":
+                if mode_key in {"itc", "mework"}:
                     processed = object()
-                    router.mark_itc_duplicate_status.return_value = processed
+                    postprocess_method = getattr(router, handler.postprocess_method_name)
+                    postprocess_method.return_value = processed
                     self.assertIs(
                         processed,
                         handler.postprocess_metadata(
@@ -85,7 +86,7 @@ class RouterModeHandlerTests(unittest.TestCase):
                             metadata,
                         ),
                     )
-                    router.mark_itc_duplicate_status.assert_called_once_with(
+                    postprocess_method.assert_called_once_with(
                         3,
                         row,
                         "LNI-2",

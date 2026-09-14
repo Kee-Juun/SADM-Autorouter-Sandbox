@@ -13,6 +13,7 @@ DOCUMENT_MODE_FLAG_PRECEDENCE = (
     ("irsplr_mode", "irsplr"),
     ("ohtax0_mode", "ohtax0"),
     ("mnsutb_mode", "mnsutb"),
+    ("mework_mode", "mework"),
 )
 
 
@@ -42,6 +43,7 @@ def dispatch_document_run(
     irsplr_mode=False,
     ohtax0_mode=False,
     mnsutb_mode=False,
+    mework_mode=False,
 ) -> Optional[DocumentRunOutcome]:
     """Run the first active document mode using legacy precedence."""
 
@@ -51,6 +53,7 @@ def dispatch_document_run(
         "irsplr_mode": irsplr_mode,
         "ohtax0_mode": ohtax0_mode,
         "mnsutb_mode": mnsutb_mode,
+        "mework_mode": mework_mode,
     }
     mode_key = next(
         (

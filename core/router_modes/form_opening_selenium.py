@@ -20,6 +20,8 @@ def open_and_process_form(
     irsplr_metadata=None,
     ohtax0_metadata=None,
     mnsutb_metadata=None,
+    mework_metadata=None,
+    mosu00_metadata=None,
 ):
     """Open Modify mode, process the form, or perform a fresh-start retry."""
 
@@ -48,6 +50,8 @@ def open_and_process_form(
             irsplr_metadata=irsplr_metadata,
             ohtax0_metadata=ohtax0_metadata,
             mnsutb_metadata=mnsutb_metadata,
+            **({"mework_metadata": mework_metadata} if mework_metadata is not None else {}),
+            **({"mosu00_metadata": mosu00_metadata} if mosu00_metadata is not None else {}),
         )
         if status == "DONE":
             router.submit_irt_form(file_path, row_index)
@@ -95,6 +99,8 @@ def open_and_process_form(
                 irsplr_metadata=irsplr_metadata,
                 ohtax0_metadata=ohtax0_metadata,
                 mnsutb_metadata=mnsutb_metadata,
+                **({"mework_metadata": mework_metadata} if mework_metadata is not None else {}),
+                **({"mosu00_metadata": mosu00_metadata} if mosu00_metadata is not None else {}),
             )
 
         logging.error(

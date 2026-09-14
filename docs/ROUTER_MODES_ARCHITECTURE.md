@@ -223,9 +223,13 @@ Detail to `Table-(5-day spec source)` in `core/mnsutb_extractor.py`. This is not
 behavior-preserving modularization; it is documented separately in
 `MNSUTB_SOURCE_DETAIL_COMPLIANCE.md`.
 
+The 2026-09-14 production sync adds MEWORK as a modular document-only mode, expands
+ITC docket parsing and rewards progression, and preserves the existing Selenium
+boundaries. See `RECENT_PRODUCTION_SYNC_2026-09-14.md`.
+
 ## Supported and legacy mode keys
 
-The GUI currently exposes seven modes:
+The GUI currently exposes nine modes:
 
 | Key | Display name | Processing shape |
 | --- | --- | --- |
@@ -236,6 +240,8 @@ The GUI currently exposes seven modes:
 | `irsplr` | IRSPLR Autorouter | Document-only batch with PDF metadata extraction |
 | `ohtax0` | OHTAX0 Autorouter | Document-only batch with PDF metadata extraction |
 | `mnsutb` | MNSUTB Autorouter | Document-only batch with PDF metadata extraction |
+| `mework` | MEWORK Autorouter | Document-only STMEWORK batch with PDF metadata extraction |
+| `mosu00` | MOSU Autorouter | Hybrid counsel/main routing with specialized minutes-HTML table cases |
 
 `wc` still appears in function parameters, filename detection, and older documentation.
 The current code comments describe it as retained for backward compatibility and no
@@ -288,6 +294,7 @@ yet passed through the runtime. It is expanded into flags at the GUI/worker boun
 - `irsplr_mode`
 - `ohtax0_mode`
 - `mnsutb_mode`
+- `mework_mode`
 
 It accepts but intentionally does not use `wc_mode`. The worker forwards the flags to
 `run_automation_workflow()` and reconstructs a mode string in its exception path.
@@ -308,7 +315,7 @@ It accepts but intentionally does not use `wc_mode`. The worker forwards the fla
 Mode derivation currently uses this effective precedence:
 
 ```text
-mspb > itc > irsplr > ohtax0 > mnsutb > dar > smd
+mspb > itc > irsplr > ohtax0 > mnsutb > mework > mosu00 > dar > smd
 ```
 
 That precedence matters if callers accidentally provide multiple true flags. Initial

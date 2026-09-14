@@ -116,6 +116,21 @@ DOCUMENT_MODE_HANDLERS: Mapping[str, DocumentModeHandler] = MappingProxyType(
             extract_method_name="extract_mnsutb_metadata_from_search_result",
             fill_method_name="fill_mnsutb_irt_form",
         ),
+        "mework": DocumentModeHandler(
+            key="mework",
+            metadata_keyword="mework_metadata",
+            record_method_name="record_mework_metadata",
+            extract_method_name="extract_mework_metadata_from_search_result",
+            fill_method_name="fill_mework_irt_form",
+            postprocess_method_name="mark_mework_duplicate_status",
+        ),
+        "mosu00": DocumentModeHandler(
+            key="mosu00",
+            metadata_keyword="mosu00_metadata",
+            record_method_name="record_mosu00_metadata",
+            extract_method_name="extract_mosu00_metadata_from_search_result",
+            fill_method_name="fill_mosu00_table_irt_form",
+        ),
     }
 )
 
@@ -136,6 +151,10 @@ def select_row_mode_handler(
     row_is_ohtax0: bool = False,
     mnsutb_mode: bool = False,
     row_is_mnsutb: bool = False,
+    mework_mode: bool = False,
+    row_is_mework: bool = False,
+    mosu00_mode: bool = False,
+    row_is_mosu00_table: bool = False,
 ) -> Optional[DocumentModeHandler]:
     """Select a row handler using the exact existing process-batch precedence."""
 
@@ -149,6 +168,10 @@ def select_row_mode_handler(
         return DOCUMENT_MODE_HANDLERS["ohtax0"]
     if mnsutb_mode or row_is_mnsutb:
         return DOCUMENT_MODE_HANDLERS["mnsutb"]
+    if mework_mode or row_is_mework:
+        return DOCUMENT_MODE_HANDLERS["mework"]
+    if mosu00_mode and row_is_mosu00_table:
+        return DOCUMENT_MODE_HANDLERS["mosu00"]
     return None
 
 
@@ -161,7 +184,7 @@ def select_form_mode_handler(
 
     if mspb_mode:
         return DOCUMENT_MODE_HANDLERS["mspb"]
-    for mode_key in ("itc", "irsplr", "ohtax0", "mnsutb"):
+    for mode_key in ("itc", "irsplr", "ohtax0", "mnsutb", "mework", "mosu00"):
         if metadata_by_mode.get(mode_key):
             return DOCUMENT_MODE_HANDLERS[mode_key]
     return None

@@ -27,6 +27,8 @@ def record_batch_row_error(
     is_irsplr_row,
     is_ohtax0_row,
     is_mnsutb_row,
+    is_mework_row=lambda _row: False,
+    is_mosu00_table_row=lambda _row: False,
 ) -> BatchRowErrorOutcome:
     """Record the existing generic row-error side effects in order."""
 
@@ -49,6 +51,12 @@ def record_batch_row_error(
     elif is_mnsutb_row(row):
         mode_key = "mnsutb"
         record_metadata = router.record_mnsutb_metadata
+    elif is_mework_row(row):
+        mode_key = "mework"
+        record_metadata = router.record_mework_metadata
+    elif is_mosu00_table_row(row):
+        mode_key = "mosu00"
+        record_metadata = router.record_mosu00_metadata
 
     metadata_status = None
     if record_metadata is not None:

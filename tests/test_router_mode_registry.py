@@ -21,6 +21,8 @@ EXPECTED_OPTIONS = [
     ("irsplr", "IRSPLR Autorouter"),
     ("ohtax0", "OHTAX0 Autorouter"),
     ("mnsutb", "MNSUTB Autorouter"),
+    ("mework", "MEWORK Autorouter"),
+    ("mosu00", "MOSU Autorouter"),
 ]
 
 
@@ -43,7 +45,7 @@ class RouterModeRegistryTests(unittest.TestCase):
         }
 
         self.assertEqual(
-            {"mspb", "itc", "irsplr", "ohtax0", "mnsutb"},
+            {"mspb", "itc", "irsplr", "ohtax0", "mnsutb", "mework"},
             document_only,
         )
 
