@@ -33,7 +33,7 @@ No further batch-code movement is recommended for readability alone.
 | `CaseLawRouter.process_rows()` | 65 lines |
 | Router class methods | 159 |
 | `core/router_modes/` Python modules | 45 |
-| Full offline suite | 419 tests |
+| Full offline suite | 555 tests |
 
 The remaining router size does not indicate that every method should move. It
 contains compatibility entry points plus shared browser/PDF helpers whose extraction
